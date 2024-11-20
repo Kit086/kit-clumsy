@@ -28,15 +28,17 @@ if [ -z "$IFACE" ] || [ -z "$SRC" ] || [ -z "$DST" ] || [ -z "$DELAY" ] || [ -z 
   exit 1
 fi
 
-# 配置 iptables 标记流量
+# 配置出站流量限制（本地 -> 目标）
 sudo iptables -t mangle -A OUTPUT -s $SRC -d $DST -j MARK --set-mark 1
-
-# 配置 tc 规则
 sudo tc qdisc add dev $IFACE root handle 1: htb
 sudo tc class add dev $IFACE parent 1: classid 1:1 htb rate $BANDWIDTH
 sudo tc qdisc add dev $IFACE parent 1:1 handle 10: netem delay $DELAY loss $LOSS
-
-# 将标记流量绑定到队列
 sudo tc filter add dev $IFACE protocol ip parent 1:0 prio 1 handle 1 fw flowid 1:1
 
-echo "配置已完成：网卡=$IFACE 源=$SRC 目标=$DST 延迟=$DELAY 丢包率=$LOSS 带宽=$BANDWIDTH"
+# 配置入站流量限制（目标 -> 本地）
+sudo iptables -t mangle -A PREROUTING -s $DST -d $SRC -j MARK --set-mark 2
+sudo tc qdisc add dev $IFACE ingress
+sudo tc filter add dev $IFACE parent ffff: protocol ip handle 2 fw action mirred egress redirect dev $IFACE
+sudo tc qdisc add dev ifb0 root handle 2: netem delay $DELAY loss $LOSS
+
+echo "双向配置完成：网卡=$IFACE 源=$SRC 目标=$DST 延迟=$DELAY 丢包率=$LOSS 带宽=$BANDWIDTH"

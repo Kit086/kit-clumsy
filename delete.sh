@@ -20,6 +20,7 @@ fi
 
 # 删除所有 tc 和 iptables 规则
 sudo tc qdisc del dev $IFACE root
+sudo tc qdisc del dev ifb0 root
 sudo iptables -t mangle -F
 
 echo "已清除 $IFACE 上的所有网络配置"
