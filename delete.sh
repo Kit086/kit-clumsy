@@ -20,19 +20,52 @@ fi
 
 # 删除上行规则
 echo "清除上行流量规则 (dev $IFACE)..."
-sudo tc qdisc del dev $IFACE root 2>/dev/null
-sudo tc qdisc del dev $IFACE ingress 2>/dev/null
+if sudo tc qdisc del dev $IFACE root 2>/dev/null; then
+  echo "已清除 $IFACE 的 root 配置"
+else
+  echo "未发现 $IFACE 的 root 配置"
+fi
+
+if sudo tc filter del dev $IFACE protocol ip parent 1:0 prio 1 handle 1 fw 2>/dev/null; then
+  echo "已清除 $IFACE 的 filter 配置"
+else
+  echo "未发现 $IFACE 的 filter 配置"
+fi
+
+if sudo tc qdisc del dev $IFACE ingress 2>/dev/null; then
+  echo "已清除 $IFACE 的 ingress 配置"
+else
+  echo "未发现 $IFACE 的 ingress 配置"
+fi
 
 # 删除下行规则
 echo "清除下行流量规则 (ifb0)..."
-sudo tc qdisc del dev ifb0 root 2>/dev/null
+if sudo tc qdisc del dev ifb0 root 2>/dev/null; then
+  echo "已清除 ifb0 的 root 配置"
+else
+  echo "未发现 ifb0 的 root 配置"
+fi
+
+if sudo tc filter del dev ifb0 protocol ip parent 20:0 prio 1 handle 2 fw 2>/dev/null; then
+  echo "已清除 ifb0 的 filter 配置"
+else
+  echo "未发现 ifb0 的 filter 配置"
+fi
 
 # 关闭 ifb0 接口
 echo "关闭 ifb0 接口..."
-sudo ip link set ifb0 down
+if sudo ip link set ifb0 down 2>/dev/null; then
+  echo "ifb0 接口已关闭"
+else
+  echo "ifb0 接口未启用或已关闭"
+fi
 
 # 删除 iptables 规则
 echo "清除 iptables 规则..."
-sudo iptables -t mangle -F
+if sudo iptables -t mangle -F; then
+  echo "已清除 iptables 中的 mangle 规则"
+else
+  echo "未发现 iptables 中的 mangle 规则"
+fi
 
 echo "所有网络限制已清除！"

@@ -1,5 +1,13 @@
 # kit-satnet-simulator
 
+## 注意
+
+**请谨慎使用，不要在生产环境中使用该工具！！！**
+
+该工具是我在全新的虚拟机上自动的网络模拟工具，用于模拟不同网络环境下的网络延迟、带宽、丢包率等情况。该工具基于 `tc` 和 `iptables` 实现，可以在 Linux 系统上使用。
+
+该工具可能会清除现有的网络配置，因此请谨慎使用。
+
 ## **用法示例**
 
 ### **0. 赋予脚本可执行权限**
@@ -11,7 +19,7 @@ sudo chmod +x configure.sh check.sh delete.sh
 ### **1. 配置网络规则**
 使用 `configure.sh` 脚本配置网络规则。例如：
 ```bash
-bash configure.sh -i ens33 -s 192.168.18.202 -d 192.168.18.204 -U 500ms -D 600ms -B 128kbps -b 512kbps -J 50ms -L 5%
+bash configure.sh -i ens33 -s 192.168.18.202 -d 192.168.18.204 -U 1000ms -D 1000ms -B 128kbps -b 512kbps -J 100ms -L 50%
 ```
 
 #### 参数说明：
