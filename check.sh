@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # 默认值
-IFACE=""
+IFACE="" # 网络接口
 
-# 解析参数
+# 参数解析
 while getopts ":i:" opt; do
   case $opt in
     i) IFACE="$OPTARG" ;;    # 网卡名
@@ -18,12 +18,20 @@ if [ -z "$IFACE" ]; then
   exit 1
 fi
 
-# 显示当前配置
-echo "tc qdisc 规则："
-sudo tc qdisc show dev $IFACE
+# 删除上行流量规则
+echo "清除上行流量规则 (dev $IFACE)..."
+sudo tc qdisc del dev $IFACE root
 
-echo "tc class 规则："
-sudo tc class show dev $IFACE
+# 删除下行流量规则
+echo "清除下行流量规则 (ifb0)..."
+sudo tc qdisc del dev ifb0 root
 
-echo "iptables 规则："
-sudo iptables -t mangle -L -v
+# 删除 iptables 规则
+echo "清除 iptables 规则..."
+sudo iptables -t mangle -F
+
+# 关闭 ifb0 接口
+echo "关闭 ifb0 接口..."
+sudo ip link set dev ifb0 down
+
+echo "所有网络限制已清除！"
